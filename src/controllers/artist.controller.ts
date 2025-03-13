@@ -4,40 +4,30 @@ import jwt from "jsonwebtoken";
 import { body, validationResult } from "express-validator";
 import dotenv from "dotenv";
 import User from "../models/User";
-import Artist from "../models/Artist";
+
 
 dotenv.config();
 
 export const ArtistSignup = async (req: Request, res: Response) => {
     try {
-      const { fullName, email, password, genres, profilePicture } = req.body;
-  
-      // Validate required fields
+      const { fullName, email, password, genres, profilePicture  } = req.body;
       if (!fullName || !email || !password || !genres) {
         return res.status(400).json({ message: "All required fields must be filled." });
       }
-  
-      // Check if artist already exists
-      const existingArtist = await Artist.findOne({ email });
+      const existingArtist = await User.findOne({ email });
       if (existingArtist) {
         return res.status(400).json({ message: "Email already registered." });
       }
-  
-      // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
-  
-      // Create new artist
-      const newArtist = new Artist({
+      const newArtist = new User({
         fullName,
         email,
         password: hashedPassword,
         genres,
         profilePicture,
+        role : "artist"
       });
-  
       await newArtist.save();
-  
-      // Generate JWT token
       const token = jwt.sign({ id: newArtist._id, email: newArtist.email }, process.env.JWT_SECRET as string, {
         expiresIn: "7d",
       });
@@ -64,7 +54,7 @@ export const ArtistSignup = async (req: Request, res: Response) => {
         return res.status(400).json({ message: "Email and password cannot be updated here." });
       }
   
-      const updatedArtist = await Artist.findByIdAndUpdate(
+      const updatedArtist = await User.findByIdAndUpdate(
         artistId,
         { $set: updateData },
         { new: true, runValidators: true, select: "-password" } // Exclude password
