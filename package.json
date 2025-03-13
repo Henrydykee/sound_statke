@@ -1,0 +1,50 @@
+{
+    "name": "soundstake-backend",
+    "version": "1.0.0",
+    "description": "Backend service for SoundStake - A fan-powered music investment platform.",
+    "main": "dist/server.ts",
+    "scripts": {
+        "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+        "build": "tsc",
+        "start": "node dist/server.ts",
+        "lint": "eslint . --ext .ts",
+        "format": "prettier --write .",
+        "test": "NODE_ENV=test jest --runInBand --forceExit --detectOpenHandles"
+    },
+    "dependencies": {
+        "bcryptjs": "^2.4.3",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "express-validator": "^7.2.1",
+        "helmet": "^7.0.0",
+        "ioredis": "^5.6.0",
+        "jsonwebtoken": "^9.0.2",
+        "mongoose": "^7.8.6",
+        "morgan": "^1.10.0",
+        "pg": "^8.10.0",
+        "zod": "^3.21.4"
+    },
+    "devDependencies": {
+        "@types/bcryptjs": "^2.4.2",
+        "@types/cors": "^2.8.14",
+        "@types/express": "^4.17.15",
+        "@types/jest": "^29.5.14",
+        "@types/jsonwebtoken": "^9.0.0",
+        "@types/node": "^20.4.0",
+        "@types/supertest": "^6.0.2",
+        "eslint": "^8.47.0",
+        "jest": "^29.7.0",
+        "mongodb-memory-server": "^10.1.4",
+        "prettier": "^3.1.0",
+        "supertest": "^7.0.0",
+        "ts-jest": "^29.2.6",
+        "ts-node": "^10.9.2",
+        "ts-node-dev": "^2.0.0",
+        "typescript": "^5.2.2"
+    },
+    "engines": {
+        "node": ">=16.0.0"
+    },
+    "license": "MIT"
+}
