@@ -4,7 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import connectDB from "./config/db";
-import authRoutes from "./routes/auth.route";
+import authRoutes from "./routes/auth/auth.route";
 
 dotenv.config();
 const app = express();

@@ -15,14 +15,14 @@ beforeAll(async () => {
 });
 
 // Clean database between tests but keep connection
-afterEach(async () => {
-  if (mongoose.connection.readyState !== 0) {
-    const collections = await mongoose.connection.db.collections();
-    for (const collection of collections) {
-     // await collection.deleteMany({});
-    }
-  }
-});
+// afterEach(async () => {
+//   if (mongoose.connection.readyState !== 0) {
+//     const collections = await mongoose.connection.db.collections();
+//     for (const collection of collections) {
+//      await collection.deleteMany({});
+//     }
+//   }
+// });
 
 // Close connection after all tests complete
 afterAll(async () => {
@@ -111,7 +111,7 @@ describe("User Signup", () => {
   it("should sign up a new artist", async () => {
     const res = await request(app).post("/api/auth/artist-signup").send({
       fullName: "John Doe",
-      email: "artist@exampleq.com", // Existing email
+      email: "artist@exampleq.com", 
       username: "artistuser",
       dob: "1995-08-10",
       nationality: "Nigerian",
@@ -143,7 +143,7 @@ describe("User Signup", () => {
       profilePicture: "https://example.com/image.jpg",
     });
     expect(res.status).toBe(409);
-    expect(res.body.message).toBe("Email already registered.");
+    expect(res.body.message).toBe("Email already registered or username already taken.");
   });
   it("should update artist profile", async () => {
     const res = await request(app)

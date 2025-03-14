@@ -3,8 +3,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { body, validationResult } from "express-validator";
 import dotenv from "dotenv";
-import User from "../models/User";
-import { AuthRequest } from "../types/types";
+import User from "../../models/User";
+import { AuthRequest } from "../../types/types";
 
 
 dotenv.config();
@@ -19,7 +19,7 @@ export const ArtistSignup = async (req: Request, res: Response) => {
 
       const existingUser = await User.findOne({ $or: [{ email }, { username }] });
       if (existingUser) {
-        return res.status(409).json({ message: "Email already registered." });
+        return res.status(409).json({ message: "Email already registered or username already taken." });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -30,7 +30,6 @@ export const ArtistSignup = async (req: Request, res: Response) => {
           dob,
           nationality,
           email,
-          password: hashedPassword,
           genres,
           profilePicture,
           role: "artist"
@@ -57,8 +56,6 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     const artistId = req.user?.id;
     const updateData = req.body;
 
-    console.log("Update Data:", updateData); // Debugging
-
     if (updateData.email || updateData.password) {
       return res.status(400).json({ message: "Email and password cannot be updated here." });
     }
@@ -69,10 +66,9 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
       { new: true, runValidators: true }
     );
 
-// Debugging
 
     if (!user) {
-      return res.status(404).json({ message: "Artist not found." });
+      return res.status(404).json({ message: "User not found." });
     }
 
     res.status(200).json({ message: "Profile updated successfully.", data: user });
