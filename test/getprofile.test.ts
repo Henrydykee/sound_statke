@@ -28,6 +28,7 @@ const token = jwt.sign({ id: mockUser._id }, JWT_SECRET, { expiresIn: "1h" });
 
 describe("GET /api/user/profile", () => {
   beforeAll(async () => {
+    process.env.JWT_SECRET = process.env.JWT_SECRET ?? 'testsecret';
     await User.create(mockUser); // Insert mock user into the test database
   });
 
