@@ -44,6 +44,8 @@ const UserSchema = new Schema<IUser>(
     nationality: { type: String, required: true },
     preferredCurrency: { type: String, enum: ["NGN", "USD"], default: "USD" },
     isPasscodeset : { type: Boolean, default: false },
+    passcode : { type: String },
+    password: { type: String, required: true },
     role: { type: String, enum: ["user", "artist"], default: "user" },
     profilePicture: { type: String },
     coverPhoto: { type: String },
@@ -60,7 +62,7 @@ const UserSchema = new Schema<IUser>(
     kycStatus: { type: String, enum: ["pending", "verified", "rejected" ,"submitted"], default: "pending" },
     twoFactorEnabled: { type: Boolean, default: false },
     artistDetails: {
-      stageName: { type: String },
+      stageName: { type: String ,default: null},
       genres: {type : Array},
       biography: { type: String },
       city: { type: String },

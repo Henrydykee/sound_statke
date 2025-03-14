@@ -19,6 +19,7 @@ export const authenticateUser = async (req: AuthRequest, res: Response, next: Ne
     const user = await User.findById(decoded.id).select("_id role");
   
 
+
     if (!user) {
       return res.status(401).json({ message: "Invalid token. User not found." });
     }
@@ -26,6 +27,6 @@ export const authenticateUser = async (req: AuthRequest, res: Response, next: Ne
     req.user = { id: user._id, role: user.role }; // Attach user ID & role to request
     next(); // Proceed to next middleware
   } catch (error) {
-    res.status(401).json({ message: "Invalid or expired token." });
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 };

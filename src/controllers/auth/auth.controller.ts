@@ -74,9 +74,13 @@ export const login = async (req: Request, res: Response) => {
 
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
+    console.log(user);
     if (!user) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
+
+    console.log(password);
+    console.log(user.password);
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password" });

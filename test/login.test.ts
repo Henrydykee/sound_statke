@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import connectDB, { closeDB } from "../src/config/db";
+import { closeRedis } from "../src/utils/redisClient";
 
 let user: any;
 let token: string;
@@ -20,6 +21,7 @@ beforeAll(async () => {
 // Close connection after all tests complete
 afterAll(async () => {
   await closeDB();
+  await closeRedis();
 });
 
 beforeAll(async () => {
