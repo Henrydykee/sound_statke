@@ -3,8 +3,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { body, validationResult } from "express-validator";
 import dotenv from "dotenv";
-import User from "../models/User";
-import { AuthRequest } from "../types/types";
+import User from "../../models/User";
+import { AuthRequest } from "../../types/types";
 
 dotenv.config();
 
@@ -30,13 +30,14 @@ export const signup = async (req: Request, res: Response) => {
       username,
       dob,
       nationality,
+      isPasscodeset : false,
       preferredCurrency,
       password: hashedPassword,
       role : "user"
     });
 
     await newUser.save();
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET as string, {
+    const token = jwt.sign({ id: newUser._id  }, process.env.JWT_SECRET as string, {
       expiresIn: "7d",
     });
 
@@ -169,6 +170,34 @@ export const loginWithPasscode = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error. Please try again later." });
   }
 };
+
+export const getUserProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await User.findById(req.user?.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    res.status(200).json({
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        username: user.username,
+        dob: user.dob,
+        nationality: user.nationality,
+        preferredCurrency: user.preferredCurrency,
+        isPasscodeset: user.isPasscodeset,
+        role: user.role,
+        profilePicture: user.profilePicture
+      },
+    });
+  } catch (error) {
+    console.error("Error getting profile:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
+  }
+}
 
 
 

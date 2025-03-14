@@ -43,8 +43,6 @@ const UserSchema = new Schema<IUser>(
     dob: { type: Date, required: true },
     nationality: { type: String, required: true },
     preferredCurrency: { type: String, enum: ["NGN", "USD"], default: "USD" },
-    password: { type: String, required: true },
-    passcode : { type: String },
     isPasscodeset : { type: Boolean, default: false },
     role: { type: String, enum: ["user", "artist"], default: "user" },
     profilePicture: { type: String },
