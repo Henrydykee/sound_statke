@@ -66,6 +66,11 @@ export const login = async (req: Request, res: Response) => {
     if (!process.env.JWT_SECRET) {
       throw new Error("JWT_SECRET is not defined");
     }
+
+    if (!req.body.password || !req.body.email) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
@@ -97,9 +102,6 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-
-
-
 export const setPasscode = async (req: AuthRequest, res: Response) => {
   try {
     const { passcode } = req.body;
@@ -116,6 +118,7 @@ export const setPasscode = async (req: AuthRequest, res: Response) => {
     // Hash passcode before saving
     const salt = await bcrypt.genSalt(10);
     user.passcode = await bcrypt.hash(passcode, salt);
+    user.isPasscodeset = true;
 
     await user.save();
     res.status(200).json({ message: "Passcode set successfully." });

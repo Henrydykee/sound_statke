@@ -9,6 +9,7 @@ export interface IUser extends Document {
   dob: Date;
   passcode : string;
   nationality: string;
+  isPasscodeset : boolean;
   preferredCurrency: "NGN" | "USD";
   password: string;
   role: "user" | "artist"; // Distinguish between user types
@@ -24,7 +25,7 @@ export interface IUser extends Document {
     tiktok?: string;
   };
   governmentId?: string;
-  kycStatus?: "pending" | "verified" | "rejected";
+  kycStatus?: "submitted" |"pending" | "verified" | "rejected";
   twoFactorEnabled?: boolean;
   artistDetails?: {
     stageName?: string;
@@ -41,10 +42,11 @@ const UserSchema = new Schema<IUser>(
     username: { type: String, required: true, unique: true },
     dob: { type: Date, required: true },
     nationality: { type: String, required: true },
-    preferredCurrency: { type: String, enum: ["NGN", "USD"], required: true },
+    preferredCurrency: { type: String, enum: ["NGN", "USD"], default: "USD" },
     password: { type: String, required: true },
-    passcode : { type: String, required: true },
-    role: { type: String, enum: ["user", "artist"], required: true },
+    passcode : { type: String },
+    isPasscodeset : { type: Boolean, default: false },
+    role: { type: String, enum: ["user", "artist"], default: "user" },
     profilePicture: { type: String },
     coverPhoto: { type: String },
     phoneNumber: { type: String },
@@ -57,11 +59,11 @@ const UserSchema = new Schema<IUser>(
       tiktok: { type: String },
     },
     governmentId: { type: String },
-    kycStatus: { type: String, enum: ["pending", "verified", "rejected"], default: "pending" },
+    kycStatus: { type: String, enum: ["pending", "verified", "rejected" ,"submitted"], default: "pending" },
     twoFactorEnabled: { type: Boolean, default: false },
     artistDetails: {
       stageName: { type: String },
-      genres: [{ type: String }],
+      genres: {type : Array},
       biography: { type: String },
       city: { type: String },
     },

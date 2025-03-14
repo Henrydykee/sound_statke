@@ -19,7 +19,7 @@ afterEach(async () => {
   if (mongoose.connection.readyState !== 0) {
     const collections = await mongoose.connection.db.collections();
     for (const collection of collections) {
-      await collection.deleteMany({});
+     // await collection.deleteMany({});
     }
   }
 });
@@ -30,6 +30,10 @@ afterAll(async () => {
 });
 
 describe("User Signup", () => {
+
+  let token: string;
+  let artistId: string;
+
   it("should successfully register a user", async () => {
     const response = await request(app)
       .post("/api/auth/user/signup")
@@ -103,4 +107,65 @@ describe("User Signup", () => {
     expect(response.status).toBe(400);
     expect(response.body.message).toBe("Preferred currency must be NGN or USD.");
   });
+
+  it("should sign up a new artist", async () => {
+    const res = await request(app).post("/api/auth/artist-signup").send({
+      fullName: "John Doe",
+      email: "artist@exampleq.com", // Existing email
+      username: "artistuser",
+      dob: "1995-08-10",
+      nationality: "Nigerian",
+      preferredCurrency: "NGN",
+      password: "SecurePass123!",
+      genres: ["pop"],
+      profilePicture: "https://example.com/image.jpg",
+    });
+
+
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty("artist");
+    expect(res.body).toHaveProperty("token");
+
+    token = res.body.token;
+    artistId = res.body.artist._id;
+  });
+
+  it("should not allow duplicate email signup", async () => {
+    const res = await request(app).post("/api/auth/artist-signup").send({
+      fullName: "John Doe",
+      email: "artist@exampleq.com", // Existing email
+      username: "artistuser",
+      dob: "1995-08-10",
+      nationality: "Nigerian",
+      preferredCurrency: "NGN",
+      password: "SecurePass123!",
+      genres: ["pop"],
+      profilePicture: "https://example.com/image.jpg",
+    });
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe("Email already registered.");
+  });
+  it("should update artist profile", async () => {
+    const res = await request(app)
+      .patch(`/api/auth/editprofile`) // Removed artistId from the URL
+      .set("Authorization", `Bearer ${token}`)
+      .send({    artistDetails: {
+        stageName: "Haella",
+        genres: ["rnd", "pop"],
+      }, });  
+    expect(res.status).toBe(200);
+    expect(res.body.message).toBe("Profile updated successfully.");
+  });
+  
+  it("should not update email or password", async () => {
+    const res = await request(app)
+      .patch(`/api/auth/editprofile`) // Removed artistId from the URL
+      .set("Authorization", `Bearer ${token}`)
+      .send({ email: "newemail@test.com", password: "newpassword" });
+  
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("Email and password cannot be updated here.");
+  });
+  
+
 });
