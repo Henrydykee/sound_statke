@@ -11,6 +11,7 @@ import User from "../src/models/User";
 
 // Create a single connection for all tests
 beforeAll(async () => {
+  process.env.JWT_SECRET = process.env.JWT_SECRET ?? 'testsecret';
   await connectDB();
 });
 

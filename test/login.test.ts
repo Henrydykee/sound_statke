@@ -12,6 +12,7 @@ let user: any;
 let token: string;
 
 beforeAll(async () => {
+  process.env.JWT_SECRET = process.env.JWT_SECRET ?? 'testsecret';
   await connectDB();
 });
 
