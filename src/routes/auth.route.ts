@@ -1,13 +1,16 @@
 import express from "express";
-import { ArtistSignup, updateArtistProfile } from "../controllers/artist.controller";
-import { signup } from "../controllers/auth.controller";
-import { authenticateArtist } from "../middleware/authMiddleware";
+import { ArtistSignup as artistSignup, updateProfile } from "../controllers/artist.controller";
+import { login, loginWithPasscode, setPasscode, signup } from "../controllers/auth.controller";
+import { authenticateUser } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
 router.post("/user/signup", signup);
-router.post("/Artist/signup", ArtistSignup);
-router.patch("/editprofile", authenticateArtist, updateArtistProfile);
+router.post("/login", login);
+router.post("/login-passcode", loginWithPasscode);
+router.post("/set-passcode", authenticateUser, setPasscode);
+router.post("/artist-signup", artistSignup);
+router.patch("/editprofile", authenticateUser, updateProfile);
 
 
 export default router;
