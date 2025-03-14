@@ -29,6 +29,7 @@ export const ArtistSignup = async (req: Request, res: Response) => {
           username,
           dob,
           nationality,
+          password: hashedPassword,
           email,
           genres,
           profilePicture,
