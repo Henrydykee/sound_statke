@@ -5,6 +5,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import connectDB from "./config/db";
 import authRoutes from "./routes/auth/auth.route";
+import transactionRoutes from "./routes/transactions/transaction";
 
 dotenv.config();
 const app = express();
@@ -22,6 +23,8 @@ app.get("/", (req, res) => {
 
 // Register routes
 app.use("/api/auth", authRoutes);
+app.use("/api/auth", transactionRoutes);
+
 
 
 const PORT = process.env.PORT || 5000;
