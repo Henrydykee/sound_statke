@@ -28,6 +28,7 @@ const PORT = process.env.PORT || 5000;
 
 
 if (process.env.NODE_ENV !== "test") {
+
   connectDB();
   app.listen(PORT, () => {
     console.log(`🎵 SoundStake API is running on port ${PORT}`);
