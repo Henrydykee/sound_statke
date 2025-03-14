@@ -2,12 +2,13 @@
 
 import express from "express";
 import { authenticateUser } from "../../middleware/authMiddleware";
-import { fundUserWallet, getBalance } from "../../controllers/transactions/transaction";
+import { fundUserWallet, getBalance, getTransactionHistory } from "../../controllers/transactions/transaction";
 
 
-const router = express.Router();
+const transactionRoutes = express.Router();
 
-router.get("/wallet/balance", authenticateUser, getBalance);
-router.post("/wallet/fund", authenticateUser, fundUserWallet);
+transactionRoutes.get("/wallet/balance", authenticateUser, getBalance);
+transactionRoutes.post("/wallet/fund", authenticateUser, fundUserWallet);
+transactionRoutes.get("api/transactions ", authenticateUser, getTransactionHistory);
 
-export default router;
+export default transactionRoutes;

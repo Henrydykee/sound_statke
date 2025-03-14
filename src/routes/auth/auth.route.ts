@@ -3,15 +3,15 @@ import { ArtistSignup as artistSignup, updateProfile } from "../../controllers/a
 import { getUserProfile, login, loginWithPasscode, setPasscode, signup } from "../../controllers/auth/auth.controller";
 import { authenticateUser } from "../../middleware/authMiddleware";
 
-const router = express.Router();
+const authRoutes = express.Router();
 
-router.post("/user/signup", signup);
-router.post("/login", login);
-router.post("/login-passcode", loginWithPasscode);
-router.post("/set-passcode", authenticateUser, setPasscode);
-router.post("/artist-signup", artistSignup);
-router.patch("/editprofile", authenticateUser, updateProfile);
-router.get("/getUser" , authenticateUser , getUserProfile)
+authRoutes.post("/user/signup", signup);
+authRoutes.post("/login", login);
+authRoutes.post("/login-passcode", loginWithPasscode);
+authRoutes.post("/set-passcode", authenticateUser, setPasscode);
+authRoutes.post("/artist-signup", artistSignup);
+authRoutes.patch("/editprofile", authenticateUser, updateProfile);
+authRoutes.get("/getUser" , authenticateUser , getUserProfile)
 
 
-export default router;
+export default authRoutes;

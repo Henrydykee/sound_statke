@@ -1,7 +1,18 @@
 import { Transaction } from "../../models/transaction";
 
 
-export const createTransaction = async (userId: string, amount: number, currency: string, type: string) => {
+export enum TransactionType {
+  FUND = "fund",
+  WITHDRAW = "withdraw",
+  INVEST = "invest",
+}
+
+export const createTransaction = async (
+  userId: string,
+  amount: number,
+  currency: string,
+  type: TransactionType
+) => {
   return await Transaction.create({ userId, amount, currency, type });
 };
 
