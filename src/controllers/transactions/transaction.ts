@@ -3,8 +3,8 @@ import { Request, Response } from "express";
 import { errorHandler } from "../../utils/errorHandler";
 import {  getWalletBalance, fundWallet } from "../../services/transaction/wallet";
 import { AuthRequest } from "../../types/types";
-import { createTransaction, TransactionType } from "../../services/transaction/transaction";
-import { Transaction } from "../../models/transaction";
+import { createTransaction, } from "../../services/transaction/transaction";
+import { Transaction, TransactionType } from "../../models/transaction";
 
 
 

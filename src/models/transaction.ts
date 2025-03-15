@@ -21,11 +21,27 @@ export const Wallet = mongoose.model<IWallet>("Wallet", WalletSchema);
 
 
 
+export enum TransactionType {
+  FUND = "fund",
+  WITHDRAW = "withdraw",
+  INVEST = "invest",
+}
+
+export enum TransactionStatus {
+  PENDING = "pending",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  CANCELLED = "cancelled",
+}
+
+
+
 interface ITransaction extends Document {
     userId: mongoose.Types.ObjectId;
     amount: number;
     currency: "USD" | "NGN";
-    type: "deposit" | "withdrawal";
+    type: "fund" | "withdraw" | "invest";
+    status: "pending" | "completed" | "failed" | "cancelled";
     createdAt: Date;
   }
   
@@ -34,7 +50,8 @@ interface ITransaction extends Document {
       userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
       amount: { type: Number, required: true },
       currency: { type: String, enum: ["USD", "NGN"], required: true },
-      type: { type: String, enum: ["deposit", "withdrawal"], required: true },
+      type: { type: String, enum: ["fund", "withdraw", "invest"], required: true },
+      status: { type: String, enum: Object.values(TransactionStatus), default: TransactionStatus.PENDING },
     },
     { timestamps: true }
   );

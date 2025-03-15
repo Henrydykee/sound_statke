@@ -23,7 +23,7 @@ app.get("/", (req, res) => {
 
 // Register routes
 app.use("/api/auth", authRoutes);
-app.use("/api/auth", transactionRoutes);
+app.use("/api/transactions", transactionRoutes);
 
 
 
