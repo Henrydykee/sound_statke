@@ -23,6 +23,7 @@
         "mongoose": "^7.8.6",
         "morgan": "^1.10.0",
         "pg": "^8.10.0",
+        "redis": "^4.7.0",
         "zod": "^3.21.4"
     },
     "devDependencies": {

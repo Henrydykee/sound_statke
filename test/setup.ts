@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
+import { closeRedis } from "../src/utils/redisClient";
 
 let mongo: MongoMemoryServer;
 
@@ -16,4 +17,5 @@ afterEach(async () => {
 afterAll(async () => {
   await mongoose.connection.close();
   await mongo.stop();
+  await closeRedis();
 });
