@@ -7,15 +7,13 @@ let mongoServer: MongoMemoryServer | null = null;
 
 export const connectDB = async () => {
   try {
-    // Force close any existing connections first
     if (mongoose.connection.readyState !== 0) {
       console.log("🔄 Closing existing MongoDB connection...");
       await mongoose.disconnect();
     }
 
-    // For test environment
+  
     if (process.env.NODE_ENV === "test") {
-      // Clean up any previous memory server
       if (mongoServer) {
         await mongoServer.stop();
         mongoServer = null;
@@ -28,8 +26,6 @@ export const connectDB = async () => {
       console.log("✅ Test DB Connected to Memory Server");
       return;
     }
-
-    // For non-test environments
     await mongoose.connect(process.env.MONGO_URI as string);
     console.log("✅ MongoDB Connected");
   } catch (error) {

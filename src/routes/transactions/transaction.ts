@@ -9,6 +9,6 @@ const transactionRoutes = express.Router();
 
 transactionRoutes.get("/wallet/balance", authenticateUser, getBalance);
 transactionRoutes.post("/wallet/fund", authenticateUser, fundUserWallet);
-transactionRoutes.get("api/transactions ", authenticateUser, getTransactionHistory);
+transactionRoutes.get("", authenticateUser, getTransactionHistory);
 
 export default transactionRoutes;

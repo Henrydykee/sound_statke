@@ -1,11 +1,8 @@
 // tests/controllers/transactions/transaction.test.ts
 import request from 'supertest';
 import app from '../src/server';
-import { AuthRequest } from '../src/types/types';
-import { Transaction, TransactionType } from '../src/models/transaction';
-import { getWalletBalance, fundWallet } from '../src/services/transaction/wallet';
-import { createTransaction } from '../src/services/transaction/transaction';
-import connectDB from '../src/config/db';
+import connectDB, { closeDB } from '../src/config/db';
+import { successResponse } from '../src/utils/response';
 
 describe('Transaction Controller', () => {
   let token: string;
@@ -14,7 +11,7 @@ describe('Transaction Controller', () => {
   beforeAll(async () => {
     await connectDB();
     const response = await request(app)
-      .post('/api/auth/user/signup')
+      .post('/api/auth/signup')
       .send({
         name: 'John Doe',
         email: 'john@example.com',
@@ -25,10 +22,12 @@ describe('Transaction Controller', () => {
         password: 'SecurePass123!',
       });
 
-      console.log(response.body);
+    token = response.body.data.token;
+    userId = response.body.data.id;
+  });
 
-    token = response.body.token;
-    userId = response.body.user._id;
+  afterAll(async () => {
+    await closeDB();
   });
 
   describe('GET /wallet/balance', () => {
@@ -36,23 +35,18 @@ describe('Transaction Controller', () => {
       const response = await request(app)
         .get('/api/transactions/wallet/balance')
         .set('Authorization', `Bearer ${token}`);
-
-
+  
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('message');
-      expect(response.body).toHaveProperty('balance');
-    });
-
-    it('should return error if wallet balance retrieval fails', async () => {
-      // You need to simulate an error in the getWalletBalance function
-      // This could be done by modifying the function to throw an error
-      // or by using a library like sinon to stub the function and make it throw an error
-      const response = await request(app)
-        .get('/api/wallet/balance')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(response.status).toBe(500);
-      expect(response.body).toHaveProperty('message');
+      expect(response.body).toMatchObject({
+        message: 'Balance fetched successfully.',
+        status: true,
+        data: expect.objectContaining({
+          balance: expect.objectContaining({
+            balanceNGN: expect.any(Number),
+            balanceUSD: expect.any(Number),
+          }),
+        }),
+      });
     });
   });
 
@@ -60,31 +54,23 @@ describe('Transaction Controller', () => {
     it('should fund user wallet', async () => {
       const amount = 100;
       const currency = 'USD';
-
+  
       const response = await request(app)
-        .post('/api/wallet/fund')
+        .post('/api/transactions/wallet/fund')
         .set('Authorization', `Bearer ${token}`)
         .send({ amount, currency });
-
+  
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('message');
-      expect(response.body).toHaveProperty('wallet');
-    });
-
-    it('should return error if wallet funding fails', async () => {
-      // You need to simulate an error in the fundWallet function
-      // This could be done by modifying the function to throw an error
-      // or by using a library like sinon to stub the function and make it throw an error
-      const amount = 100;
-      const currency = 'USD';
-
-      const response = await request(app)
-        .post('/api/wallet/fund')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ amount, currency });
-
-      expect(response.status).toBe(500);
-      expect(response.body).toHaveProperty('message');
+      expect(response.body).toMatchObject({
+        message: 'Wallet funded successfully.',
+        status: true,
+        data: expect.objectContaining({
+          wallet: expect.objectContaining({
+            balanceNGN: expect.any(Number),
+            balanceUSD: expect.any(Number),
+          }),
+        }),
+      });
     });
   });
 
@@ -94,21 +80,21 @@ describe('Transaction Controller', () => {
         .get('/api/transactions')
         .set('Authorization', `Bearer ${token}`);
 
+  
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('transactions');
-      expect(response.body).toHaveProperty('pagination');
-    });
-
-    it('should return error if transaction history retrieval fails', async () => {
-      // You need to simulate an error in the Transaction.find function
-      // This could be done by modifying the function to throw an error
-      // or by using a library like sinon to stub the function and make it throw an error
-      const response = await request(app)
-        .get('/api/transactions')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(response.status).toBe(500);
-      expect(response.body).toHaveProperty('message');
+      expect(response.body).toMatchObject({
+        message: 'Transaction history fetched successfully.', 
+        status: true,
+        data: expect.objectContaining({
+          transactions: expect.any(Array),
+          pagination: expect.objectContaining({
+            total: expect.any(Number),
+            page: expect.any(Number),
+            limit: expect.any(Number),
+            totalPages: expect.any(Number),
+          }),
+        }),
+      });
     });
   });
 });

@@ -5,7 +5,7 @@ import { authenticateUser } from "../../middleware/authMiddleware";
 
 const authRoutes = express.Router();
 
-authRoutes.post("/user/signup", signup);
+authRoutes.post("/signup", signup);
 authRoutes.post("/login", login);
 authRoutes.post("/login-passcode", loginWithPasscode);
 authRoutes.post("/set-passcode", authenticateUser, setPasscode);

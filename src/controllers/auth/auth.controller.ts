@@ -5,105 +5,89 @@ import { body, validationResult } from "express-validator";
 import dotenv from "dotenv";
 import User from "../../models/User";
 import { AuthRequest } from "../../types/types";
+import { errorResponse, successResponse } from "../../utils/response";
 
 dotenv.config();
 
 export const signup = async (req: Request, res: Response) => {
   try {
     const { name, email, username, dob, nationality, preferredCurrency, password } = req.body;
+
     if (!name || !email || !username || !dob || !nationality || !preferredCurrency || !password) {
-      return res.status(400).json({ message: "All fields are required." });
+      return res.status(400).json(errorResponse("All fields are required."));
     }
     if (!["NGN", "USD"].includes(preferredCurrency)) {
-      return res.status(400).json({ message: "Preferred currency must be NGN or USD." });
-    }
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-    if (existingUser) {
-      return res.status(409).json({ message: "Email or username is already in use." });
+      return res.status(400).json(errorResponse("Preferred currency must be NGN or USD."));
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      return res.status(409).json(errorResponse("Email or username is already in use."));
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({
       name,
       email,
       username,
       dob,
       nationality,
-      isPasscodeset : false,
       preferredCurrency,
       password: hashedPassword,
-      role : "user"
+      isPasscodeset: false,
+      role: "user",
     });
 
     await newUser.save();
-    const token = jwt.sign({ id: newUser._id  }, process.env.JWT_SECRET as string, {
-      expiresIn: "7d",
-    });
 
-    res.status(201).json({
-      message: "User registered successfully.",
-      user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        username: newUser.username,
-        dob: newUser.dob,
-        nationality: newUser.nationality,
-        preferredCurrency: newUser.preferredCurrency,
-      },
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET as string, { expiresIn: "7d" });
+
+    res.status(201).json(successResponse("User registered successfully.", {
+      id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
+      username: newUser.username,
+      dob: newUser.dob,
+      role: newUser.role,
+      nationality: newUser.nationality,
+      preferredCurrency: newUser.preferredCurrency,
       token,
-    });
+    }));
   } catch (error) {
     console.error("Signup Error:", error);
-    res.status(500).json({ message: "Server error. Please try again later." });
+    res.status(500).json(errorResponse("Server error. Please try again later."));
   }
 };
-
 
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    if (!process.env.JWT_SECRET) {
-      throw new Error("JWT_SECRET is not defined");
+    if (!email || !password) {
+      return res.status(400).json(errorResponse("Email and password are required."));
     }
 
-    if (!req.body.password || !req.body.email) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
-
-    const normalizedEmail = email.toLowerCase().trim();
-    const user = await User.findOne({ email: normalizedEmail });
-    console.log(user);
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      return res.status(400).json({ message: "Invalid email or password" });
+      return res.status(400).json(errorResponse("Invalid email or password."));
     }
 
-    console.log(password);
-    console.log(user.password);
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid email or password" });
+      return res.status(400).json(errorResponse("Invalid email or password."));
     }
-    const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role }, 
-      process.env.JWT_SECRET, 
-      { expiresIn: "7d" }
-    );
 
-    res.status(200).json({
-      message: "Login successful",
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET as string, { expiresIn: "7d" });
+
+    res.status(200).json(successResponse("Login successful.", {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
       token,
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        role: "user",
-      },
-    });
+    }));
   } catch (error) {
     console.error("Login Error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json(errorResponse("Internal server error."));
   }
 };
 
@@ -112,24 +96,22 @@ export const setPasscode = async (req: AuthRequest, res: Response) => {
     const { passcode } = req.body;
 
     if (!passcode) {
-      return res.status(400).json({ message: "Passcode is required." });
+      return res.status(400).json(errorResponse("Passcode is required."));
     }
 
     const user = await User.findById(req.user?.id);
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json(errorResponse("User not found."));
     }
 
-    // Hash passcode before saving
-    const salt = await bcrypt.genSalt(10);
-    user.passcode = await bcrypt.hash(passcode, salt);
+    user.passcode = await bcrypt.hash(passcode, 10);
     user.isPasscodeset = true;
-
     await user.save();
-    res.status(200).json({ message: "Passcode set successfully." });
+
+    res.status(200).json(successResponse("Passcode set successfully."));
   } catch (error) {
     console.error("Error setting passcode:", error);
-    res.status(500).json({ message: "Server error. Please try again later." });
+    res.status(500).json(errorResponse("Server error. Please try again later."));
   }
 };
 
@@ -138,40 +120,30 @@ export const loginWithPasscode = async (req: Request, res: Response) => {
     const { email, passcode } = req.body;
 
     if (!email || !passcode) {
-      return res.status(400).json({ message: "Email and passcode are required." });
+      return res.status(400).json(errorResponse("Email and passcode are required."));
     }
 
     const user = await User.findOne({ email });
-
     if (!user || !user.passcode) {
-      return res.status(404).json({ message: "User not found or passcode not set." });
+      return res.status(404).json(errorResponse("User not found or passcode not set."));
     }
 
-  
     const isMatch = await bcrypt.compare(passcode, user.passcode);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid passcode." });
+      return res.status(400).json(errorResponse("Invalid passcode."));
     }
 
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET as string, { expiresIn: "7d" });
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "7d" }
-    );
-
-    res.status(200).json({
-      message: "Login successful",
+    res.status(200).json(successResponse("Login successful.", {
+      id: user._id,
+      email: user.email,
+      role: user.role,
       token,
-      user: {
-        id: user._id,
-        email: user.email,
-        role: user.role,
-      },
-    });
+    }));
   } catch (error) {
     console.error("Login with Passcode Error:", error);
-    res.status(500).json({ message: "Server error. Please try again later." });
+    res.status(500).json(errorResponse("Server error. Please try again later."));
   }
 };
 
@@ -180,28 +152,26 @@ export const getUserProfile = async (req: AuthRequest, res: Response) => {
     const user = await User.findById(req.user?.id);
 
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json(errorResponse("User not found."));
     }
 
-    res.status(200).json({
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        username: user.username,
-        dob: user.dob,
-        nationality: user.nationality,
-        preferredCurrency: user.preferredCurrency,
-        isPasscodeset: user.isPasscodeset,
-        role: user.role,
-        profilePicture: user.profilePicture
-      },
-    });
+    res.status(200).json(successResponse("User profile retrieved successfully.", {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      username: user.username,
+      dob: user.dob,
+      nationality: user.nationality,
+      preferredCurrency: user.preferredCurrency,
+      isPasscodeset: user.isPasscodeset,
+      role: user.role,
+      profilePicture: user.profilePicture,
+    }));
   } catch (error) {
     console.error("Error getting profile:", error);
-    res.status(500).json({ message: "Server error. Please try again later." });
+    res.status(500).json(errorResponse("Server error. Please try again later."));
   }
-}
+};
 
 
 

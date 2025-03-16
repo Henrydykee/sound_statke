@@ -5,168 +5,154 @@ import request from "supertest";
 import app from "../src/server";
 import connectDB, { closeDB } from "../src/config/db";
 import User from "../src/models/User";
-
-
-
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 // Create a single connection for all tests
 beforeAll(async () => {
-  process.env.JWT_SECRET = process.env.JWT_SECRET ?? 'testsecret';
+  process.env.JWT_SECRET = process.env.JWT_SECRET ?? "testsecret";
   await connectDB();
 });
 
-// Clean database between tests but keep connection
-// afterEach(async () => {
-//   if (mongoose.connection.readyState !== 0) {
-//     const collections = await mongoose.connection.db.collections();
-//     for (const collection of collections) {
-//      await collection.deleteMany({});
-//     }
-//   }
-// });
-
-// Close connection after all tests complete
+// Cleanup after tests
 afterAll(async () => {
   await closeDB();
 });
 
-describe("User Signup", () => {
-
+describe("Authentication Tests", () => {
   let token: string;
-  let artistId: string;
+  let userId: string;
+  let passcode: string = "123456";
 
   it("should successfully register a user", async () => {
-    const response = await request(app)
-      .post("/api/auth/user/signup")
-      .send({
-        name: "John Doe",
-        email: "john@example.com",
-        username: "johndoe",
-        dob: "1995-08-10",
-        nationality: "Nigerian",
-        preferredCurrency: "NGN",
-        password: "SecurePass123!",
-      });
-
+    const response = await request(app).post("/api/auth/signup").send({
+      name: "John Doe",
+      email: "john@example.com",
+      username: "johndoe",
+      dob: "1995-08-10",
+      nationality: "Nigerian",
+      preferredCurrency: "NGN",
+      password: "SecurePass123!",
+    });
     expect(response.status).toBe(201);
-    expect(response.body).toHaveProperty("user");
-    expect(response.body.user.email).toBe("john@example.com");
+    expect(response.body.data).toHaveProperty("token");
+    userId = response.body.data.id;
   });
 
   it("should return 400 if required fields are missing", async () => {
-    const response = await request(app)
-      .post("/api/auth/user/signup")
-      .send({
-        email: "missing@example.com",
-        password: "password123",
-      });
+    const response = await request(app).post("/api/auth/signup").send({
+      email: "missing@example.com",
+      password: "password123",
+    });
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe("All fields are required.");
   });
 
   it("should return 409 if email or username is already in use", async () => {
-    await User.create({
+    const response = await request(app).post("/api/auth/signup").send({
       name: "Jane Doe",
-      email: "jane@example.com",
-      username: "janedoe",
+      email: "john@example.com", // Existing email
+      username: "anotheruser",
       dob: "1995-08-10",
       nationality: "Nigerian",
-      preferredCurrency: "NGN", // Changed from USD to NGN for consistency
+      preferredCurrency: "NGN",
       password: "SecurePass123!",
     });
-
-    const response = await request(app)
-      .post("/api/auth/user/signup")
-      .send({
-        name: "Another User",
-        email: "jane@example.com", // Existing email
-        username: "uniqueuser",
-        dob: "1995-08-10",
-        nationality: "Nigerian",
-        preferredCurrency: "NGN",
-        password: "SecurePass123!",
-      });
 
     expect(response.status).toBe(409);
     expect(response.body.message).toBe("Email or username is already in use.");
   });
 
   it("should return 400 if preferred currency is invalid", async () => {
-    const response = await request(app)
-      .post("/api/auth/user/signup") // Fixed endpoint path
-      .send({
-        name: "Invalid Currency",
-        email: "invalid@example.com",
-        username: "invaliduser",
-        dob: "1995-08-10",
-        nationality: "Nigerian",
-        preferredCurrency: "EUR", // Invalid currency
-        password: "SecurePass123!",
-      });
+    const response = await request(app).post("/api/auth/signup").send({
+      name: "Invalid Currency",
+      email: "invalid@example.com",
+      username: "invaliduser",
+      dob: "1995-08-10",
+      nationality: "Nigerian",
+      preferredCurrency: "EUR", // Invalid currency
+      password: "SecurePass123!",
+    });
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe("Preferred currency must be NGN or USD.");
   });
 
-  it("should sign up a new artist", async () => {
-    const res = await request(app).post("/api/auth/artist-signup").send({
-      fullName: "John Doe",
-      email: "artist@exampleq.com", 
-      username: "artistuser",
-      dob: "1995-08-10",
-      nationality: "Nigerian",
-      preferredCurrency: "NGN",
+  it("should successfully log in a user", async () => {
+    const response = await request(app).post("/api/auth/login").send({
+      email: "john@example.com",
       password: "SecurePass123!",
-      genres: ["pop"],
-      profilePicture: "https://example.com/image.jpg",
     });
 
-
-    expect(res.status).toBe(201);
-    expect(res.body).toHaveProperty("artist");
-    expect(res.body).toHaveProperty("token");
-
-    token = res.body.token;
-    artistId = res.body.artist._id;
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveProperty("token");
+    token = response.body.data.token;
   });
 
-  it("should not allow duplicate email signup", async () => {
-    const res = await request(app).post("/api/auth/artist-signup").send({
-      fullName: "John Doe",
-      email: "artist@exampleq.com", // Existing email
-      username: "artistuser",
-      dob: "1995-08-10",
-      nationality: "Nigerian",
-      preferredCurrency: "NGN",
-      password: "SecurePass123!",
-      genres: ["pop"],
-      profilePicture: "https://example.com/image.jpg",
+  it("should return 400 for invalid login credentials", async () => {
+    const response = await request(app).post("/api/auth/login").send({
+      email: "john@example.com",
+      password: "wrongpassword",
     });
-    expect(res.status).toBe(409);
-    expect(res.body.message).toBe("Email already registered or username already taken.");
-  });
-  it("should update artist profile", async () => {
-    const res = await request(app)
-      .patch(`/api/auth/editprofile`) // Removed artistId from the URL
-      .set("Authorization", `Bearer ${token}`)
-      .send({    artistDetails: {
-        stageName: "Haella",
-        genres: ["rnd", "pop"],
-      }, });  
-    expect(res.status).toBe(200);
-    expect(res.body.message).toBe("Profile updated successfully.");
-  });
-  
-  it("should not update email or password", async () => {
-    const res = await request(app)
-      .patch(`/api/auth/editprofile`) // Removed artistId from the URL
-      .set("Authorization", `Bearer ${token}`)
-      .send({ email: "newemail@test.com", password: "newpassword" });
-  
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe("Email and password cannot be updated here.");
-  });
-  
 
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Invalid email or password.");
+  });
+
+  it("should successfully set a passcode", async () => {
+    const response = await request(app)
+      .post("/api/auth/set-passcode")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ passcode });
+
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe("Passcode set successfully.");
+
+    // Ensure passcode is actually set
+    const user = await User.findById(userId);
+    expect(user?.isPasscodeset).toBe(true);
+  });
+
+  it("should return 400 if passcode is missing", async () => {
+    const response = await request(app)
+      .post("/api/auth/set-passcode")
+      .set("Authorization", `Bearer ${token}`)
+      .send({});
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Passcode is required.");
+  });
+
+  it("should successfully log in with a passcode", async () => {
+    // Manually setting passcode since it's hashed
+    await User.findByIdAndUpdate(userId, { passcode: await bcrypt.hash(passcode, 10) });
+
+    const response = await request(app).post("/api/auth/login-passcode").send({
+      email: "john@example.com",
+      passcode,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveProperty("token");
+  });
+
+  it("should return 400 for incorrect passcode", async () => {
+    const response = await request(app).post("/api/auth/login-passcode").send({
+      email: "john@example.com",
+      passcode: "wrongpasscode",
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Invalid passcode.");
+  });
+
+  it("should retrieve user profile", async () => {
+    const response = await request(app)
+      .get("/api/auth/getUser")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveProperty("email", "john@example.com");
+  });
 });

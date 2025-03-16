@@ -13,18 +13,9 @@ let user: any;
 let token: string;
 
 beforeAll(async () => {
-  process.env.JWT_SECRET = process.env.JWT_SECRET ?? 'testsecret';
+  process.env.JWT_SECRET = process.env.JWT_SECRET ?? "testsecret";
   await connectDB();
-});
 
-
-// Close connection after all tests complete
-afterAll(async () => {
-  await closeDB();
-  await closeRedis();
-});
-
-beforeAll(async () => {
   // Create a test user
   user = new User({
     name: "Test User",
@@ -39,26 +30,49 @@ beforeAll(async () => {
   await user.save();
 
   // Generate a valid JWT token
-  token = jwt.sign({ id: user._id, email: user.email, role: user.role }, process.env.JWT_SECRET as string, { expiresIn: "7d" });
+  token = jwt.sign(
+    { id: user._id, email: user.email, role: user.role },
+    process.env.JWT_SECRET as string,
+    { expiresIn: "7d" }
+  );
 });
 
 afterAll(async () => {
-  await mongoose.connection.close();
+  await closeDB();
 });
 
-describe("Auth Routes", () => {
-  // ✅ Test Login with Email & Password
+
+
+describe("Auth - Login", () => {
+
+
+    it("should successfully register a user", async () => {
+      const response = await request(app).post("/api/auth/signup").send({
+        name: "John Doe",
+        email: "john@example.com",
+        username: "johndoe",
+        dob: "1995-08-10",
+        nationality: "Nigerian",
+        preferredCurrency: "NGN",
+        password: "SecurePass123!",
+      });
+      expect(response.status).toBe(201);
+      expect(response.body.data).toHaveProperty("token");
+    });
+
+  // ✅ Successful Login
   it("should log in successfully with correct credentials", async () => {
     const res = await request(app).post("/api/auth/login").send({
-      email: "testuser@example.com",
-      password: "password123",
+      email: "john@example.com",
+      password: "SecurePass123!",
     });
 
     expect(res.status).toBe(200);
-    expect(res.body.message).toBe("Login successful");
-    expect(res.body.token).toBeDefined();
+    expect(res.body.message).toBe("Login successful.");
+    expect(res.body.data).toHaveProperty("token");
   });
 
+  // ❌ Invalid Email or Password
   it("should return 400 for incorrect password", async () => {
     const res = await request(app).post("/api/auth/login").send({
       email: "testuser@example.com",
@@ -66,9 +80,10 @@ describe("Auth Routes", () => {
     });
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe("Invalid email or password");
+    expect(res.body.message).toBe("Invalid email or password.");
   });
 
+  // ❌ Missing Fields
   it("should return 400 for missing email or password", async () => {
     const res = await request(app).post("/api/auth/login").send({
       email: "",
@@ -76,63 +91,7 @@ describe("Auth Routes", () => {
     });
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe("Invalid email or password");
+    expect(res.body.message).toBe("Email and password are required.");
   });
 
-  // ✅ Test Setting Passcode
-  it("should set passcode successfully", async () => {
-    const res = await request(app)
-      .post("/api/auth/set-passcode")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ passcode: "1234" });
-
-    expect(res.status).toBe(200);
-    expect(res.body.message).toBe("Passcode set successfully.");
-
-    // Verify passcode is stored
-    const updatedUser = await User.findById(user._id);
-    expect(updatedUser?.isPasscodeset).toBe(true);
-  });
-
-  it("should return 400 if passcode is missing", async () => {
-    const res = await request(app)
-      .post("/api/auth/set-passcode")
-      .set("Authorization", `Bearer ${token}`)
-      .send({});
-
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe("Passcode is required.");
-  });
-
-  // ✅ Test Login with Passcode
-  it("should log in with passcode successfully", async () => {
-    const res = await request(app).post("/api/auth/login-passcode").send({
-      email: "testuser@example.com",
-      passcode: "1234",
-    });
-
-    expect(res.status).toBe(200);
-    expect(res.body.message).toBe("Login successful");
-    expect(res.body.token).toBeDefined();
-  });
-
-  it("should return 400 for incorrect passcode", async () => {
-    const res = await request(app).post("/api/auth/login-passcode").send({
-      email: "testuser@example.com",
-      passcode: "0000",
-    });
-
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe("Invalid passcode.");
-  });
-
-  it("should return 404 if user does not exist", async () => {
-    const res = await request(app).post("/api/auth/login-passcode").send({
-      email: "nonexistent@example.com",
-      passcode: "1234",
-    });
-
-    expect(res.status).toBe(404);
-    expect(res.body.message).toBe("User not found or passcode not set.");
-  });
 });
