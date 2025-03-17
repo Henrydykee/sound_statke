@@ -114,28 +114,4 @@ export const ArtistSignup = async (req: Request, res: Response) => {
   }
 };
 
-export const updateProfile = async (req: any, res: Response) => {
-  try {
-    const artistId = req.user?.id;
-    const updateData = req.body;
 
-    if (updateData.email || updateData.password) {
-      return res.status(400).json(errorResponse("Email and password cannot be updated here."));
-    }
-
-    const user = await User.findByIdAndUpdate(
-      artistId,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    );
-
-    if (!user) {
-      return res.status(404).json(errorResponse("User not found."));
-    }
-
-    res.status(200).json(successResponse("Profile updated successfully.", user));
-  } catch (error) {
-    console.error("Error updating artist profile:", error);
-    res.status(500).json(errorResponse("Server error. Please try again later."));
-  }
-};

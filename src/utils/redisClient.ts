@@ -15,12 +15,6 @@ export const connectRedis = async () => {
   }
 };
 
-// // Function to monitor Redis connection status
-// export const monitorRedis = () => {
-//   redisClient.on("error", (err) => console.error("Redis connection error:", err));
-//   redisClient.on("connect", () => console.log("Redis connected successfully."));
-// };
-
 
 // Function to properly close Redis
 export const closeRedis = async () => {
