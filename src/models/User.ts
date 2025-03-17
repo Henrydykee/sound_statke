@@ -12,7 +12,7 @@ export interface IUser extends Document {
   isPasscodeset : boolean;
   preferredCurrency: "NGN" | "USD";
   password: string;
-  role: "user" | "artist"; // Distinguish between user types
+  role: "user" | "admin"; // Distinguish between user types
   profilePicture?: string;
   coverPhoto?: string;
   phoneNumber?: string;
@@ -26,13 +26,6 @@ export interface IUser extends Document {
   };
   governmentId?: string;
   kycStatus?: "submitted" |"pending" | "verified" | "rejected";
-  twoFactorEnabled?: boolean;
-  artistDetails?: {
-    stageName?: string;
-    genres?: string[];
-    biography?: string;
-    city?: string;
-  };
 }
 
 const UserSchema = new Schema<IUser>(
@@ -46,7 +39,7 @@ const UserSchema = new Schema<IUser>(
     isPasscodeset : { type: Boolean, default: false },
     passcode : { type: String },
     password: { type: String, required: true },
-    role: { type: String, enum: ["user", "artist"], default: "user" },
+    role: { type: String, enum: ["user", "admin"], default: "user" },
     profilePicture: { type: String },
     phoneNumber: { type: String },
     socialLinks: {
@@ -58,15 +51,7 @@ const UserSchema = new Schema<IUser>(
     },
     governmentId: { type: String ,default: null },
     kycStatus: { type: String, enum: ["pending", "verified", "rejected" ,"submitted"], default: "pending" },
-    twoFactorEnabled: { type: Boolean, default: false },
-    artistDetails: {
-      stageName: { type: String ,default: null},
-      genres: {type : Array},
-      biography: { type: String , default: null},
-      city: { type: String , default: null},
-    },
   },
-  { timestamps: true }
 );
 
 const User = mongoose.model<IUser>("User", UserSchema);
