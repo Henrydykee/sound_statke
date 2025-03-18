@@ -16,26 +16,6 @@ export const createTransaction = async (
     type,
     status: TransactionStatus.PENDING, // Default to pending
   });
-
-  // // Simulate processing logic (e.g., checking balance, external API call)
-  // try {
-  //   if (type === TransactionType.WITHDRAW) {
-  //     const hasFunds = await checkUserBalance(userId, amount);
-  //     if (!hasFunds) {
-  //       transaction.status = TransactionStatus.FAILED;
-  //       await transaction.save();
-  //       return transaction;
-  //     }
-  //   }
-
-  //   // Process the transaction successfully
-  //   transaction.status = TransactionStatus.COMPLETED;
-  //   await transaction.save();
-  // } catch (error) {
-  //   transaction.status = TransactionStatus.FAILED;
-  //   await transaction.save();
-  // }
-
   return transaction;
 };
 

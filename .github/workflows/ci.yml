@@ -3,14 +3,35 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - '**'  # Runs on any branch
   pull_request:
     branches:
-      - master
+      - '**'  
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:6
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'" 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
+
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout code
@@ -25,8 +46,22 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Wait for MongoDB and Redis to be ready
+        run: |
+          echo "Waiting for MongoDB..."
+          until nc -z localhost 27017; do sleep 1; done
+          echo "MongoDB is ready!"
+          
+          echo "Waiting for Redis..."
+          until nc -z localhost 6379; do sleep 1; done
+          echo "Redis is ready!"
+
       - name: Build project
         run: npm run build
 
       - name: Run tests
         run: npm test
+        env:
+          MONGO_URI: mongodb://localhost:27017/testdb
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379

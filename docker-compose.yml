@@ -1,0 +1,27 @@
+# version: '3.8' # Specifies the Docker Compose version to use
+
+services:
+  # MongoDB Service
+  mongo:
+    image: mongo:6  # Uses MongoDB version 6
+    container_name: mongodb_container  # Names the container for easier management
+    restart: always  # Ensures the container restarts automatically if it crashes
+    ports:
+      - "27017:27017"  # Exposes MongoDB on port 27017 (inside and outside the container)
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root  # Default MongoDB admin username
+      MONGO_INITDB_ROOT_PASSWORD: example  # Default MongoDB admin password
+    volumes:
+      - mongo_data:/data/db  # Persistent storage for MongoDB data
+
+  # Redis Service
+  redis:
+    image: redis:latest  # Uses the latest Redis version
+    container_name: redis_container  # Names the container for easy identification
+    restart: always  # Ensures Redis restarts automatically if it crashes
+    ports:
+      - "6379:6379"  # Exposes Redis on port 6379 (inside and outside the container)
+
+# Define persistent volumes for MongoDB
+volumes:
+  mongo_data:  # This volume ensures MongoDB data is not lost when the container stops

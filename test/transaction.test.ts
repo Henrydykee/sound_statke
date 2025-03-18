@@ -3,6 +3,7 @@ import request from 'supertest';
 import app from '../src/server';
 import connectDB, { closeDB } from '../src/config/db';
 import { successResponse } from '../src/utils/response';
+import { Console } from 'console';
 
 describe('Transaction Controller', () => {
   let token: string;
@@ -79,7 +80,6 @@ describe('Transaction Controller', () => {
       const response = await request(app)
         .get('/api/transactions')
         .set('Authorization', `Bearer ${token}`);
-
   
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({

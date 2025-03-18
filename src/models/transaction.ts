@@ -1,6 +1,7 @@
 
 
 import mongoose, { Schema, Document } from "mongoose";
+import { v4 as uuidv4 } from "uuid";
 
 interface IWallet extends Document {
   userId: mongoose.Types.ObjectId;
@@ -27,6 +28,7 @@ export enum TransactionType {
   INVEST = "invest",
 }
 
+
 export enum TransactionStatus {
   PENDING = "pending",
   COMPLETED = "completed",
@@ -34,27 +36,31 @@ export enum TransactionStatus {
   CANCELLED = "cancelled",
 }
 
+export interface ITransaction extends Document {
+  transactionId: string; // Unique transaction ID
+  userId: mongoose.Types.ObjectId; // Reference to the user making the transaction
+  amount: number; // Transaction amount
+  currency: "USD" | "NGN"; // Currency of the transaction
+  type: "fund" | "withdraw" | "invest"; // Type of transaction
+  status: TransactionStatus; // Transaction status
+  createdAt: Date;
+}
 
-
-interface ITransaction extends Document {
-    userId: mongoose.Types.ObjectId;
-    amount: number;
-    currency: "USD" | "NGN";
-    type: "fund" | "withdraw" | "invest";
-    status: "pending" | "completed" | "failed" | "cancelled";
-    createdAt: Date;
-  }
-  
-  const TransactionSchema = new Schema<ITransaction>(
-    {
-      userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-      amount: { type: Number, required: true },
-      currency: { type: String, enum: ["USD", "NGN"], required: true },
-      type: { type: String, enum: ["fund", "withdraw", "invest"], required: true },
-      status: { type: String, enum: Object.values(TransactionStatus), default: TransactionStatus.PENDING },
+const TransactionSchema = new Schema<ITransaction>(
+  {
+    transactionId: { 
+      type: String, 
+      unique: true, 
+      default: () => uuidv4() // Generate a unique ID for each transaction
     },
-    { timestamps: true }
-  );
-  
-  export const Transaction = mongoose.model<ITransaction>("Transaction", TransactionSchema);
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    amount: { type: Number, required: true },
+    currency: { type: String, enum: ["USD", "NGN"], required: true },
+    type: { type: String, enum: ["fund", "withdraw", "invest"], required: true },
+    status: { type: String, enum: Object.values(TransactionStatus), default: TransactionStatus.PENDING },
+  },
+  { timestamps: true }
+);
+
+export const Transaction = mongoose.model<ITransaction>("Transaction", TransactionSchema);
   
